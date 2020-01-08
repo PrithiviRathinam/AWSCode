@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
+using Newtonsoft.Json.Linq;
 using Amazon.Lambda.Core;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -31,8 +31,8 @@ namespace TestLambda
 // “emp_doj”: "10-01-2001",
 // “emp_department”: "Finance"
 // }
-            int x = details["emp_id"];
-            string s = details["emp_name"];
+           
+            string s = (string)details["emp_name"];
             return s?.ToUpper();
            
         }

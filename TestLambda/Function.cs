@@ -13,7 +13,7 @@ namespace TestLambda
     public class Function
     {
         
-        /// <summary>
+        /// <summary>   
         /// A simple function that takes a string and does a ToUpper
         /// </summary>
         /// <param name="input"></param>
@@ -21,9 +21,29 @@ namespace TestLambda
         /// <returns></returns>
         public string FunctionHandler(string input, ILambdaContext context)
         {
-            Console.WriteLine();
-            return input?.ToUpper();
+            Console.WriteLine(input);
+            var details = JObject.Parse(input);
+//            {
+// “emp_id”: 1234,
+// "emp_name": "John"
+// “emp_type”: "Fulltime",
+// “emp_dob”: "12-10-1990",
+// “emp_doj”: "10-01-2001",
+// “emp_department”: "Finance"
+// }
+            int x = details["emp_id"];
+            string s = details["emp_name"];
+            return s?.ToUpper();
            
         }
+    }
+
+    public class Employee{
+        public int emp_id { get; set; }
+        public string emp_name { get; set; }
+        public string emp_type {get; set;}
+        public string emp_dob { get; set; }
+        public string emp_doj { get; set; }
+        public string emp_department { get; set; }
     }
 }

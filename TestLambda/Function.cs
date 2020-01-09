@@ -19,10 +19,17 @@ namespace TestLambda
         /// <param name="input"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public string FunctionHandler(string input, ILambdaContext context)
+        public string FunctionHandler(JRaw input, ILambdaContext context)
         {
-            Console.WriteLine(input);
-            var details = JObject.Parse(input);
+            Console.WriteLine(input.ToString());
+            if (input.HasValues)
+            {
+
+                var val = input.Value;
+
+                Console.WriteLine(val);
+            }
+          //  var details = JObject.Parse(input);
 //            {
 // “emp_id”: 1234,
 // "emp_name": "John"
@@ -32,8 +39,8 @@ namespace TestLambda
 // “emp_department”: "Finance"
 // }
            
-            string s = (string)details["emp_name"];
-            return s?.ToUpper();
+         //   string s = (string)details["emp_name"];
+            return input.Path;
            
         }
     }

@@ -78,6 +78,7 @@ namespace PostLambda
             
             Console.WriteLine(input.ToString());
             string response = "";
+            
             try
             {
                 JToken jobj = JContainer.Parse(input.ToString());
@@ -91,6 +92,7 @@ namespace PostLambda
                     Console.WriteLine(input.Value);
                     MessageJSONProp e = jobj.ToObject<MessageJSONProp>();
                     Console.WriteLine(jobj.Value<string>("emp_name"));
+                    
                     if (e != null)
                     {
                         Console.WriteLine(e.emp_doj);
@@ -102,12 +104,12 @@ namespace PostLambda
                         }
                         else
                         {
-                            string mesFile = @"C:\JsonData\MessageFile_" 
+                            string mesFile = @"MessageFile_" 
                                                + e.emp_id
                                                + ".json";
-                            File.WriteAllText(mesFile, input.ToString());
                             
-                            CustomS3AccessPoint.UploadMessage(mesFile);
+                            
+                            CustomS3AccessPoint.UploadMessage(mesFile, input.ToString());
                             response += "Employee data sent to bucket. ";
 
                         }
@@ -161,24 +163,31 @@ namespace PostLambda
             private static RegionEndpoint bucketRegion = RegionEndpoint.USEast2;
             private static IAmazonS3 s3Client;
 
-            public static void UploadMessage(string msgFile)
+            public static void UploadMessage(string msgFile, string message)
             {
                 
                 s3Client = new AmazonS3Client(bucketRegion);
                 
-                UploadFileAsync(msgFile).Wait();
+                UploadFileAsync(msgFile, message).Wait();
             }
 
-            private static async Task UploadFileAsync(string msgFile)
+            private static async Task UploadFileAsync(string msgFile, string message)
             {
                 try
                 {
                     var fileTransferUtility =
                         new TransferUtility(s3Client);
+
+                // Option 1. Upload a file. The file name is used as the object key name.
+                // await fileTransferUtility.UploadAsync(msgFile, bucketName);
+                await s3Client.PutObjectAsync(new PutObjectRequest()
+                {
+                    InputStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(message)),
+                    BucketName = bucketName,
+                    Key = msgFile
+                }); 
+                Console.WriteLine("Upload Complete");
                     
-                    // Option 1. Upload a file. The file name is used as the object key name.
-                    await fileTransferUtility.UploadAsync(msgFile, bucketName);
-                    Console.WriteLine("Upload Complete");
                 File.Delete(msgFile);
 
                 }

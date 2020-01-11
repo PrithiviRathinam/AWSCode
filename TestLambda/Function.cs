@@ -12,7 +12,40 @@ namespace TestLambda
 {
     public class Function
     {
-        
+        //enum Department :byte
+        //{
+        //    FINANCE, HR, IT, ADMINISTRATION
+        //}
+
+        //enum EmpType : byte
+        //{
+        //    FULLTIME,INTERN,CONTRACTOR
+        //}
+
+        public static bool Validate(string tovalidate, char t)
+        {
+            if (t == 'd') {
+                switch (tovalidate) {
+                    case "hr":
+                    case "administration":
+                    case "it":
+                    case "finance": 
+                        return true;              
+                }
+            }
+            else
+            {
+                switch (tovalidate)
+                {
+                    case "fulltime":
+                    case "intern":
+                    case "contractor":
+                        return true;
+                }
+            }
+            return false;
+        }
+
         /// <summary>   
         /// A simple function that takes a string and does a ToUpper
         /// </summary>
@@ -22,25 +55,51 @@ namespace TestLambda
         public string FunctionHandler(JRaw input, ILambdaContext context)
         {
             Console.WriteLine(input.ToString());
-            if (input.HasValues)
+            string response = "";
+            try
             {
+                JToken jobj = JContainer.Parse(input.ToString());
+                if (jobj != null)
+                {
+                  
+                    Console.WriteLine(input.Value);
+                    Employee e = jobj.ToObject<Employee>();
+                    Console.WriteLine(jobj.Value<string>("emp_name"));
+                    if (e != null)
+                    {
+                        Console.WriteLine(e.emp_doj);
 
-                var val = input.Value;
+                        if (!Validate(e.emp_department.ToLower(), 'd')) {
+                            response += "invalid department";
+                        }
+                        if (!Validate(e.emp_type.ToLower(), 't'))
+                        {
+                            response += "invalid department";
+                        }
+                        response += "Employee data received\n";
 
-                Console.WriteLine(val);
+                    }
+                    else
+                    {
+                        response += "The JSON object is incomplete\n";
+                    }
+                }
+            }catch(Exception ex)
+            {
+                response += "Exception occured : " + ex.Message + "\n";
             }
-          //  var details = JObject.Parse(input);
-//            {
-// “emp_id”: 1234,
-// "emp_name": "John"
-// “emp_type”: "Fulltime",
-// “emp_dob”: "12-10-1990",
-// “emp_doj”: "10-01-2001",
-// “emp_department”: "Finance"
-// }
-           
-         //   string s = (string)details["emp_name"];
-            return input.Path;
+            //Test JSON data :
+            //{
+            //    "emp_id": 1234,
+            //               "emp_name": "John"
+            //               "emp_type": "Fulltime",
+            //               "emp_dob": "12-10-1990",
+            //               "emp_doj": "10-01-2001",
+            //               "emp_department": "Finance"
+            //           }
+
+            //   string s = (string)details["emp_name"];
+            return response;
            
         }
     }

@@ -8,7 +8,9 @@ using System.Globalization;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
-using Amazon;
+using Amazon;   
+using Amazon.Athena;
+using Amazon.Athena.Model;
 using System.IO;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.

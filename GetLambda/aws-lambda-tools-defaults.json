@@ -15,7 +15,7 @@
     "function-timeout"     : 500,
     "function-handler"     : "GetLambda::GetLambda.Function::FunctionHandler",
     "function-name"        : "empgetdata",
-    "function-role"        : "arn:aws:iam::945994839686:role/getdatalambdarole",
+    "function-role"        : "arn:aws:iam::945994839686:role/lamdarolenewone",
     "tracing-mode"         : "PassThrough",
     "environment-variables" : ""
 }

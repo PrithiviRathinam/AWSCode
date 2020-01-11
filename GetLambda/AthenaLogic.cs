@@ -13,9 +13,7 @@ namespace GetLambda
     class AthenaLogic
     {
         private const String ATHENA_TEMP_PATH = "s3://prithivienvbucket/";
-        private const String ATHENA_DB = "anotherdatabase";
-
-
+        private const String ATHENA_DB = "empdb";
         public static async Task<JRaw> QueryAthenaAndSend(string datestring)
         {
             using (var client = new AmazonAthenaClient(Amazon.RegionEndpoint.USEast2))
@@ -26,15 +24,21 @@ namespace GetLambda
                 resConf.OutputLocation = ATHENA_TEMP_PATH;
 
                 Console.WriteLine("Created Athena Client");
-                List<Dictionary<String, String>> items = await run(client, qContext, resConf,datestring);
-               // return items.ToString();
+                List<Dictionary<String, String>> items = await Run(client, qContext, resConf,datestring);
+                
+                if(items.Count == 1 && items[0].ContainsKey("error"))
+                {
+                    items[0].TryGetValue("error", out string errorinfo);
+                    return new JRaw(errorinfo);
+                }
+                // return items.ToString();
                 JObject obj = new JObject();
                 if (items.Count == 0)
                 {
                     obj.Add("count", "zero");
                     return obj.ToObject<JRaw>();
                 }
-                obj.Add("Count", items.Count);
+                obj.Add("count", items.Count);
                 for (int i = 1; i < items.Count; i++)
                 {
                     JProperty nameProp = null;
@@ -57,29 +61,43 @@ namespace GetLambda
             }
         }
 
-        async static Task<List<Dictionary<String, String>>> run(IAmazonAthena client, QueryExecutionContext qContext, ResultConfiguration resConf,string datestring)
+        async static Task<List<Dictionary<String, String>>> Run(IAmazonAthena client, QueryExecutionContext qContext, ResultConfiguration resConf,string datestring)
         {
             /* Execute a simple query on a table */
+
             StartQueryExecutionRequest qReq = new StartQueryExecutionRequest()
             {
                 QueryString = $@"SELECT * FROM emptable where emp_dob = '{datestring}'",
                 QueryExecutionContext = qContext,
                 ResultConfiguration = resConf
             };
-
+            List<Dictionary<String, String>> items = null;
             try
             {
                 /* Executes the query in an async manner */
                 StartQueryExecutionResponse qRes = await client.StartQueryExecutionAsync(qReq);
                 /* Call internal method to parse the results and return a list of key/value dictionaries */
-                List<Dictionary<String, String>> items = await getQueryExecution(client, qRes.QueryExecutionId);
-                return items;
+                 items = await getQueryExecution(client, qRes.QueryExecutionId);
+                if(items == null)
+                {
+                    Dictionary<string, string> dic1 = new Dictionary<string, string>();
+                    dic1.Add("error", "items from query execution is empty");
+                    items.Add(dic1);  
+                }
+                
+                
             }
             catch (InvalidRequestException e)
             {
+                Dictionary<string, string> dic1 = new Dictionary<string, string>();
+                dic1.Add("error", "exception at " + " (Run method) " + " : " + e.Message);
+                if (items == null)
+                    items = new List<Dictionary<string, string>>();
+                items.Add(dic1);
                 Console.WriteLine("Run Error: {0}", e.Message);
             }
-            return null;
+            
+            return items;
         }
         async static Task<List<Dictionary<String, String>>> getQueryExecution(IAmazonAthena client, String id)
         {
@@ -101,21 +119,19 @@ namespace GetLambda
                     
                     if (results == null)
                     {
-                        Dictionary<string, string> dic = new Dictionary<string, string>();
-                        dic.Add("error","results is null");
-                        lists.Add(dic);
+                        Dictionary<string, string> dic1 = new Dictionary<string, string>();
+                        dic1.Add("error","results is null");
+                        lists.Add(dic1);
                         return lists;
                     }
-                    
-
-                    
+ 
                     q = results.QueryExecution;
 
                     if (q == null)
                     {
-                        Dictionary<string, string> dic = new Dictionary<string, string>();
-                        dic.Add("error", "q is null");
-                        lists.Add(dic);
+                        Dictionary<string, string> dic3 = new Dictionary<string, string>();
+                        dic3.Add("error", "q is null");
+                        lists.Add(dic3);
                         return lists;
                     }
 
@@ -125,14 +141,14 @@ namespace GetLambda
                 }
                 catch (InvalidRequestException e)
                 {
-                    if (results == null)
-                    {
-                        Dictionary<string, string> dic = new Dictionary<string, string>();
-                        dic.Add("error", "Invalid request exception happened");
-                        lists.Add(dic);
-                        return lists;
-                    }
+                   
+                        Dictionary<string, string> dic2 = new Dictionary<string, string>();
+                        dic2.Add("error", "exception : " + " (Run method) " + " : " + e.Message);
+                        lists.Add(dic2);
                     Console.WriteLine("GetQueryExec Error: {0}", e.Message);
+
+                    return lists;
+                  
                 }
             } while (q.Status.State == "RUNNING" || q.Status.State == "QUEUED");
 
@@ -142,14 +158,20 @@ namespace GetLambda
             GetQueryResultsRequest resReq = new GetQueryResultsRequest()
             {
                 QueryExecutionId = id,
-                MaxResults = 10
+                MaxResults = 20
             };
 
             GetQueryResultsResponse resResp = null;
             /* Page through results and request additional pages if available */
+            Dictionary<String, String> dic = new Dictionary<String, String>();
+            List<Dictionary<String, String>> l = new List<Dictionary<String, String>>();
             do
             {
                 resResp = await client.GetQueryResultsAsync(resReq);
+                
+                
+                //l.Add(dict);
+
                 /* Loop over result set and create a dictionary with column name for key and data for value */
                 foreach (Row row in resResp.ResultSet.Rows)
                 {
@@ -166,9 +188,14 @@ namespace GetLambda
                     resReq.NextToken = resResp.NextToken;
                 }
             } while (resResp.NextToken != null);
-
-            /* Return List of dictionary per row containing column name and value */
-            return items;
+            if (items == null)
+            {
+                dic.Add("error","items are null here");
+                l.Add(dic);
+                return l;
+            }
+                /* Return List of dictionary per row containing column name and value */
+                return items;
         }
     }
 }

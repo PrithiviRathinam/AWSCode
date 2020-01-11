@@ -22,16 +22,18 @@ namespace GetLambda
         /// <param name="input"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public async Task<JRaw> FunctionHandler(string input, ILambdaContext context)
+        public async Task<JRaw> FunctionHandler(JObject jsonObj, ILambdaContext context)
         {
+            string input = (string)jsonObj["dob"];
             string s = "[0-9]{2}-[0-9]{2}-[0-9]{4}";
             Regex r = new Regex(s);
+            
             if (r.IsMatch(input))
             {
                 JRaw jsonresponse = await AthenaLogic.QueryAthenaAndSend(input);
                 return jsonresponse;
             }
-            return new JRaw("invalid date string");            
+            return new JRaw("invalid date string" + input);            
         }
     }
 }

@@ -48,7 +48,8 @@ namespace TestLambda
 
         public static bool HasValidDOB(string dob)
         {
-            if(DateTime.TryParse(dob, out DateTime dobj))
+            string so = dob.Replace("-", "/");
+            if(DateTime.TryParse(so, out DateTime dobj))
             {
                 if (dobj.Date < DateTime.Now.Date)
                     return true; 
@@ -81,7 +82,7 @@ namespace TestLambda
 
                         if (!Validate(e.emp_department.ToLower(), 'd') 
                          || !Validate(e.emp_type.ToLower(), 't') 
-                         || HasValidDOB(e.emp_dob)) {
+                         || !HasValidDOB(e.emp_dob)) {
                             response += "invalid department (or) DOB (or) Employee type\n";
                         }
                         else

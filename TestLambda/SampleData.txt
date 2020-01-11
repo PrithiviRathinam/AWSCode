@@ -1,0 +1,8 @@
+﻿{
+      "emp_id": 1234,
+      "emp_name": "John",
+      "emp_type": "Fulltime",
+      "emp_dob": "12-10-1990",
+      "emp_doj": "10-01-2001",
+      "emp_department": "Finance"
+}

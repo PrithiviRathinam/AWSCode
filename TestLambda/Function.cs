@@ -5,6 +5,11 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Amazon.Lambda.Core;
 using System.Globalization;
+using Amazon.S3;
+using Amazon.S3.Model;
+using Amazon.S3.Transfer;
+using Amazon;
+using System.IO;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -77,7 +82,7 @@ namespace TestLambda
                 {
                   
                     Console.WriteLine(input.Value);
-                    Employee e = jobj.ToObject<Employee>();
+                    MessageJSONProp e = jobj.ToObject<MessageJSONProp>();
                     Console.WriteLine(jobj.Value<string>("emp_name"));
                     if (e != null)
                     {
@@ -90,8 +95,14 @@ namespace TestLambda
                         }
                         else
                         {
-                            
-                            response += "Employee data received. ";
+                            string mesFile = @"C:\JsonData\MessageFile_" 
+                                               + DateTime.Now.Date.ToLongDateString().Replace(" ","_")
+                                               + DateTime.Now.Date.Millisecond
+                                               + ".json";
+                            File.WriteAllText(mesFile, input.ToString());
+
+                            CustomS3AccessPoint.UploadMessage(mesFile);
+                            response += "Employee data sent to bucket. ";
 
                         }
                     }
@@ -120,7 +131,7 @@ namespace TestLambda
         }
     }
 
-    public class Employee{
+    public class MessageJSONProp{
         public int emp_id { get; set; }
         public string emp_name { get; set; }
         public string emp_type {get; set;}
@@ -128,4 +139,50 @@ namespace TestLambda
         public string emp_doj { get; set; }
         public string emp_department { get; set; }
     }
-}
+
+    
+
+
+
+        class CustomS3AccessPoint
+        {
+            private const string bucketName = "prithivienvbucket";
+            //private const string keyName = "message_object";
+            //private string filePath;
+            // Specify your bucket region (an example region is shown).
+            private static readonly RegionEndpoint bucketRegion = RegionEndpoint.USEast2;
+            private static IAmazonS3 s3Client;
+
+            public static void UploadMessage(string msgFile)
+            {
+                s3Client = new AmazonS3Client(bucketRegion);
+                UploadFileAsync(msgFile).Wait();
+            }
+
+            private static async Task UploadFileAsync(string msgFile)
+            {
+                try
+                {
+                    var fileTransferUtility =
+                        new TransferUtility(s3Client);
+                    
+                    // Option 1. Upload a file. The file name is used as the object key name.
+                    await fileTransferUtility.UploadAsync(msgFile, bucketName);
+                    Console.WriteLine("Upload Complete");
+                File.Delete(msgFile);
+
+                }
+                catch (AmazonS3Exception e)
+                {
+                    Console.WriteLine("Error encountered on server. Message:'{0}' when writing an object", e.Message);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Unknown encountered on server. Message:'{0}' when writing an object", e.Message);
+                }
+
+            }
+        }
+    }
+
+

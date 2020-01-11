@@ -100,9 +100,7 @@ namespace TestLambda
                         else
                         {
                             string mesFile = @"C:\JsonData\MessageFile_" 
-                                               + DateTime.Now.ToFileTimeUtc()
-                                               + DateTime.Now.Date.Millisecond
-                                               + new Random().Next()
+                                               + e.emp_id
                                                + ".json";
                             File.WriteAllText(mesFile, input.ToString());
                             

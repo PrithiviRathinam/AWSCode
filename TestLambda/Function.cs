@@ -78,6 +78,10 @@ namespace TestLambda
             try
             {
                 JToken jobj = JContainer.Parse(input.ToString());
+                
+                // this is not working 
+                // string bucket = Environment.GetEnvironmentVariable("bucketname");
+
                 if (jobj != null)
                 {
                   
@@ -96,11 +100,12 @@ namespace TestLambda
                         else
                         {
                             string mesFile = @"C:\JsonData\MessageFile_" 
-                                               + DateTime.Now.Date.ToLongDateString().Replace(" ","_")
+                                               + DateTime.Now.ToFileTimeUtc()
                                                + DateTime.Now.Date.Millisecond
+                                               + new Random().Next()
                                                + ".json";
                             File.WriteAllText(mesFile, input.ToString());
-
+                            
                             CustomS3AccessPoint.UploadMessage(mesFile);
                             response += "Employee data sent to bucket. ";
 
@@ -146,16 +151,20 @@ namespace TestLambda
 
         class CustomS3AccessPoint
         {
-            private const string bucketName = "prithivienvbucket";
+            private static string bucketName = "prithivienvbucket";
+
+            
             //private const string keyName = "message_object";
             //private string filePath;
             // Specify your bucket region (an example region is shown).
-            private static readonly RegionEndpoint bucketRegion = RegionEndpoint.USEast2;
+            private static RegionEndpoint bucketRegion = RegionEndpoint.USEast2;
             private static IAmazonS3 s3Client;
 
             public static void UploadMessage(string msgFile)
             {
+                
                 s3Client = new AmazonS3Client(bucketRegion);
+                
                 UploadFileAsync(msgFile).Wait();
             }
 

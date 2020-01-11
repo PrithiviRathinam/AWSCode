@@ -46,6 +46,16 @@ namespace TestLambda
             return false;
         }
 
+        public static bool HasValidDOB(string dob)
+        {
+            if(DateTime.TryParse(dob, out DateTime dobj))
+            {
+                if (dobj.Date < DateTime.Now.Date)
+                    return true; 
+            }
+            return false;
+        }
+
         /// <summary>   
         /// A simple function that takes a string and does a ToUpper
         /// </summary>
@@ -69,15 +79,17 @@ namespace TestLambda
                     {
                         Console.WriteLine(e.emp_doj);
 
-                        if (!Validate(e.emp_department.ToLower(), 'd')) {
-                            response += "invalid department";
+                        if (!Validate(e.emp_department.ToLower(), 'd') 
+                         || !Validate(e.emp_type.ToLower(), 't') 
+                         || HasValidDOB(e.emp_dob)) {
+                            response += "invalid department (or) DOB (or) Employee type\n";
                         }
-                        if (!Validate(e.emp_type.ToLower(), 't'))
+                        else
                         {
-                            response += "invalid department";
-                        }
-                        response += "Employee data received\n";
+                            
+                            response += "Employee data received\n";
 
+                        }
                     }
                     else
                     {

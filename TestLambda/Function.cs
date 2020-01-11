@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Amazon.Lambda.Core;
+using System.Globalization;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -49,7 +50,9 @@ namespace TestLambda
         public static bool HasValidDOB(string dob)
         {
             string so = dob.Replace("-", "/");
-            if(DateTime.TryParse(so, out DateTime dobj))
+            Console.WriteLine(DateTime.Now.Date);
+            if(DateTime.TryParseExact(dob, "dd-MM-yyyy", new CultureInfo("en-US"),
+                                 DateTimeStyles.None, out DateTime dobj))
             {
                 if (dobj.Date < DateTime.Now.Date)
                     return true; 
@@ -83,23 +86,23 @@ namespace TestLambda
                         if (!Validate(e.emp_department.ToLower(), 'd') 
                          || !Validate(e.emp_type.ToLower(), 't') 
                          || !HasValidDOB(e.emp_dob)) {
-                            response += "invalid department (or) DOB (or) Employee type\n";
+                            response += "invalid department (or) DOB (or) Employee type. ";
                         }
                         else
                         {
                             
-                            response += "Employee data received\n";
+                            response += "Employee data received. ";
 
                         }
                     }
                     else
                     {
-                        response += "The JSON object is incomplete\n";
+                        response += "The JSON object is incomplete. ";
                     }
                 }
             }catch(Exception ex)
             {
-                response += "Exception occured : " + ex.Message + "\n";
+                response += "Exception occured : " + ex.Message + ". ";
             }
             //Test JSON data :
             //{
